@@ -144,11 +144,11 @@ function App() {
       const matchesOwned = filterOwned === null || amiibo.owned === filterOwned;
       const matchesFavorite = !filterFavorite || amiibo.favorite;
       const matchesSeries = selectedSeries === '' || amiibo.gameSeries === selectedSeries;
-      const matchesTypes = selectedTypes === '' || amiibo.type === selectedTypes;
+      
 
-      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries && matchesTypes;
+      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries;
     });
-  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries, selectedTypes]);
+  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries]);
 
   const stats = useMemo(() => {
     return {
