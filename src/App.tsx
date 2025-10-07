@@ -136,6 +136,11 @@ function App() {
     return Array.from(series).sort();
   }, [amiibos]);
 
+  const uniqueTypes = useMemo(() => {
+    const types = new Set(amiibos.map(a => a.type));
+    return Array.from(types).sort();
+  }, [amiibos]);
+
   const filteredAmiibos = useMemo(() => {
     return amiibos.filter(amiibo => {
       const matchesSearch = searchTerm === '' ||
