@@ -153,9 +153,9 @@ function App() {
       const matchesTypes = selectedTypes === '' || amiibo.type === selectedTypes;
       
 
-      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries;
+      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries && matchesTypes;
     });
-  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries]);
+  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries, selectedTypes]);
 
   const stats = useMemo(() => {
     return {
