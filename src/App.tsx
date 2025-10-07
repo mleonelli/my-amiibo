@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Star, Download, Upload, Search, Filter } from 'lucide-react';
+import amiiboData from './data/amiibo.json';
 
 interface Amiibo {
   amiiboSeries: string;
@@ -29,17 +30,14 @@ function App() {
     fetchAmiibos();
   }, []);
 
-  const fetchAmiibos = async () => {
+  const fetchAmiibos = () => {
     try {
-      const response = await fetch('https://www.amiiboapi.com/api/amiibo/');
-      const data = await response.json();
-
       const savedData = localStorage.getItem('amiiboCollection');
       const savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = savedData
         ? JSON.parse(savedData)
         : {};
 
-      const amiiboWithStatus: AmiiboWithStatus[] = data.amiibo.map((amiibo: Amiibo) => {
+      const amiiboWithStatus: AmiiboWithStatus[] = amiiboData.amiibo.map((amiibo: Amiibo) => {
         const id = `${amiibo.head}${amiibo.tail}`;
         return {
           ...amiibo,
@@ -51,7 +49,7 @@ function App() {
       setAmiibos(amiiboWithStatus);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching amiibos:', error);
+      console.error('Error loading amiibos:', error);
       setLoading(false);
     }
   };
