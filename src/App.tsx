@@ -135,6 +135,11 @@ function App() {
     return Array.from(series).sort();
   }, [amiibos]);
 
+  const uniqueTypes = useMemo(() => {
+    const types = new Set(amiibos.map(a => a.type));
+    return Array.from(types).sort();
+  }, [amiibos]);
+
   const filteredAmiibos = useMemo(() => {
     return amiibos.filter(amiibo => {
       const matchesSearch = searchTerm === '' ||
@@ -144,10 +149,11 @@ function App() {
       const matchesOwned = filterOwned === null || amiibo.owned === filterOwned;
       const matchesFavorite = !filterFavorite || amiibo.favorite;
       const matchesSeries = selectedSeries === '' || amiibo.gameSeries === selectedSeries;
+      const matchesTypes = selectedTypes === '' || amiibo.type === selectedTypes;
 
-      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries;
+      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries && matchesTypes;
     });
-  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries]);
+  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries, selectedTypes]);
 
   const stats = useMemo(() => {
     return {
@@ -266,6 +272,22 @@ function App() {
                 <option value="">All Series</option>
                 {uniqueSeries.map(series => (
                   <option key={series} value={series}>{series}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Types</option>
+                {uniqueTypes.map(types => (
+                  <option key={types} value={types}>{types}</option>
                 ))}
               </select>
             </div>
