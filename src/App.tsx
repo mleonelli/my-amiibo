@@ -329,7 +329,7 @@ function App() {
 
                   <div className="text-xs text-gray-600 mb-2 space-y-1">
                     <div className="line-clamp-1">{amiibo.type}</div>
-                    <div className="line-clamp-1">Amiibo Set: {amiibo.amiiboSeries}</div>
+                    <div className="line-clamp-1">{amiibo.amiiboSeries}</div>
                   </div>
 
                   <button
