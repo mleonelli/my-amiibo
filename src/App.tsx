@@ -330,7 +330,9 @@ function App() {
                   <div className="text-xs text-gray-600 mb-2 space-y-1">
                     <div className="line-clamp-1">{amiibo.type}</div>
                     <div className="line-clamp-1">{amiibo.amiiboSeries}
-                    
+                    {amiibo.amiiboSeries !== amiibo.gameSeries && (
+                      {amiibo.gameSeries}
+                    )}
                     </div>
                   </div>
 
