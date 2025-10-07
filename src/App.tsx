@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Star, Download, Upload, Search, Filter } from 'lucide-react';
-import amiiboData from './data/amiibo.json';
 
 interface Amiibo {
   amiiboSeries: string;
@@ -30,14 +29,17 @@ function App() {
     fetchAmiibos();
   }, []);
 
-  const fetchAmiibos = () => {
+  const fetchAmiibos = async () => {
     try {
+      const response = await fetch('https://www.amiiboapi.com/api/amiibo/');
+      const data = await response.json();
+
       const savedData = localStorage.getItem('amiiboCollection');
       const savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = savedData
         ? JSON.parse(savedData)
         : {};
 
-      const amiiboWithStatus: AmiiboWithStatus[] = amiiboData.amiibo.map((amiibo: Amiibo) => {
+      const amiiboWithStatus: AmiiboWithStatus[] = data.amiibo.map((amiibo: Amiibo) => {
         const id = `${amiibo.head}${amiibo.tail}`;
         return {
           ...amiibo,
@@ -49,7 +51,7 @@ function App() {
       setAmiibos(amiiboWithStatus);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading amiibos:', error);
+      console.error('Error fetching amiibos:', error);
       setLoading(false);
     }
   };
@@ -169,39 +171,39 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
-        <header className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2">
+        <header className="mb-8">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">
             Nintendo Amiibo Collection
           </h1>
-          <p className="text-gray-600 text-base md:text-lg">Track your complete Amiibo collection</p>
+          <p className="text-gray-600 text-lg">Track your complete Amiibo collection</p>
 
-          <div className="mt-4 md:mt-6 flex flex-col sm:flex-row flex-wrap gap-4 md:gap-6 items-stretch sm:items-center bg-white rounded-lg shadow-sm p-4">
-            <div className="flex gap-4 justify-around sm:justify-start flex-1">
+          <div className="mt-6 flex flex-wrap gap-6 items-center bg-white rounded-lg shadow-sm p-4">
+            <div className="flex gap-4">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-gray-900">{stats.total}</div>
-                <div className="text-xs md:text-sm text-gray-600">Total</div>
+                <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+                <div className="text-sm text-gray-600">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-green-600">{stats.owned}</div>
-                <div className="text-xs md:text-sm text-gray-600">Owned</div>
+                <div className="text-3xl font-bold text-green-600">{stats.owned}</div>
+                <div className="text-sm text-gray-600">Owned</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-yellow-600">{stats.favorites}</div>
-                <div className="text-xs md:text-sm text-gray-600">Favorites</div>
+                <div className="text-3xl font-bold text-yellow-600">{stats.favorites}</div>
+                <div className="text-sm text-gray-600">Favorites</div>
               </div>
             </div>
 
-            <div className="w-full sm:w-auto sm:ml-auto flex gap-2 md:gap-3">
+            <div className="ml-auto flex gap-3">
               <button
                 onClick={exportCollection}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base active:scale-95"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Download size={18} />
-                <span>Export</span>
+                Export
               </button>
-              <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer text-sm md:text-base active:scale-95">
+              <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
                 <Upload size={18} />
-                <span>Import</span>
+                Import
                 <input
                   type="file"
                   accept=".json"
@@ -213,13 +215,13 @@ function App() {
           </div>
         </header>
 
-        <div className="mb-4 md:mb-6 bg-white rounded-lg shadow-sm p-4 md:p-6">
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Filter size={18} className="text-gray-600" />
-            <h2 className="text-lg md:text-xl font-semibold text-gray-900">Filters</h2>
+            <Filter size={20} className="text-gray-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Search size={16} className="inline mr-1" />
@@ -230,7 +232,7 @@ function App() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name..."
-                className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -244,7 +246,7 @@ function App() {
                   const value = e.target.value;
                   setFilterOwned(value === 'all' ? null : value === 'owned');
                 }}
-                className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All</option>
                 <option value="owned">Owned</option>
@@ -259,7 +261,7 @@ function App() {
               <select
                 value={selectedSeries}
                 onChange={(e) => setSelectedSeries(e.target.value)}
-                className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Series</option>
                 {uniqueSeries.map(series => (
@@ -283,12 +285,12 @@ function App() {
             </div>
           </div>
 
-          <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-600">
+          <div className="mt-4 text-sm text-gray-600">
             Showing {filteredAmiibos.length} of {stats.total} amiibos
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredAmiibos.map((amiibo, index) => {
             const originalIndex = amiibos.findIndex(
               a => a.head === amiibo.head && a.tail === amiibo.tail
@@ -297,11 +299,11 @@ function App() {
             return (
               <div
                 key={`${amiibo.head}${amiibo.tail}`}
-                className={`bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-xl active:scale-95 ${
+                className={`bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-xl ${
                   amiibo.owned ? 'ring-2 ring-green-500' : ''
                 }`}
               >
-                <div className="relative aspect-square bg-gray-50 p-2 md:p-4">
+                <div className="relative aspect-square bg-gray-50 p-4">
                   <img
                     src={amiibo.image}
                     alt={amiibo.name}
@@ -310,29 +312,33 @@ function App() {
                   />
                   <button
                     onClick={() => toggleFavorite(originalIndex)}
-                    className={`absolute top-1 right-1 md:top-2 md:right-2 p-1.5 md:p-2 rounded-full transition-colors active:scale-90 ${
+                    className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
                       amiibo.favorite
                         ? 'bg-yellow-400 text-white'
                         : 'bg-white/80 text-gray-400 hover:text-yellow-400'
                     }`}
                   >
-                    <Star size={16} className="md:w-[18px] md:h-[18px]" fill={amiibo.favorite ? 'currentColor' : 'none'} />
+                    <Star size={18} fill={amiibo.favorite ? 'currentColor' : 'none'} />
                   </button>
                 </div>
 
-                <div className="p-2 md:p-3">
-                  <h3 className="font-semibold text-xs md:text-sm text-gray-900 mb-1 line-clamp-2 min-h-[2rem] md:min-h-[2.5rem]">
+                <div className="p-3">
+                  <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
                     {amiibo.name}
                   </h3>
 
-                  <div className="text-[10px] md:text-xs text-gray-600 mb-1.5 md:mb-2 space-y-0.5 md:space-y-1">
+                  <div className="text-xs text-gray-600 mb-2 space-y-1">
                     <div className="line-clamp-1">{amiibo.type}</div>
-                    <div className="line-clamp-1">{amiibo.amiiboSeries} / {amiibo.gameSeries}</div>
+                    <div className="line-clamp-1">{amiibo.amiiboSeries} - 
+                    {amiibo.amiiboSeries !== amiibo.gameSeries && (
+                      {amiibo.gameSeries}
+                    )}
+                    </div>
                   </div>
 
                   <button
                     onClick={() => toggleOwned(originalIndex)}
-                    className={`w-full py-1.5 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm font-medium transition-colors active:scale-95 ${
+                    className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                       amiibo.owned
                         ? 'bg-green-600 text-white hover:bg-green-700'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
