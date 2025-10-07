@@ -328,7 +328,6 @@ function App() {
                   <div className="text-[10px] md:text-xs text-gray-600 mb-1.5 md:mb-2 space-y-0.5 md:space-y-1">
                     <div className="line-clamp-1">{amiibo.type}</div>
                     <div className="line-clamp-1">{amiibo.gameSeries}</div>
-                    
                   </div>
 
                   <button
