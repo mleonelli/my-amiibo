@@ -24,6 +24,7 @@ function App() {
   const [filterOwned, setFilterOwned] = useState<boolean | null>(null);
   const [filterFavorite, setFilterFavorite] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState<string>('');
+  const [selectedTypes, setSelectedTypes] = useState<string>('');
 
   useEffect(() => {
     fetchAmiibos();
