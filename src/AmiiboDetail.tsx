@@ -1,0 +1,302 @@
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, Gamepad2, Loader2 } from 'lucide-react';
+
+interface AmiiboDetailProps {
+  amiibo: {
+    name: string;
+    image: string;
+    character: string;
+    gameSeries: string;
+    amiiboSeries: string;
+    type: string;
+  };
+  onClose: () => void;
+}
+
+interface ReleaseDate {
+  au?: string;
+  eu?: string;
+  jp?: string;
+  na?: string;
+}
+
+interface GameUsage {
+  gameName: string;
+  amiiboUsage?: Array<{
+    Usage: string;
+    write: boolean;
+  }>;
+}
+
+interface AmiiboDetailData {
+  release: ReleaseDate;
+  games3DS?: GameUsage[];
+  gamesSwitch?: GameUsage[];
+  gamesWiiU?: GameUsage[];
+}
+
+export default function AmiiboDetail({ amiibo, onClose }: AmiiboDetailProps) {
+  const [detailData, setDetailData] = useState<AmiiboDetailData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAmiiboDetails();
+  }, [amiibo.name]);
+
+  const fetchAmiiboDetails = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `https://www.amiiboapi.com/api/amiibo/?name=${encodeURIComponent(amiibo.name)}&showusage&showgames`
+      );
+      const data = await response.json();
+
+      if (data.amiibo && data.amiibo.length > 0) {
+        setDetailData(data.amiibo[0]);
+      } else {
+        setError('No details found for this Amiibo');
+      }
+    } catch (err) {
+      setError('Failed to load Amiibo details');
+      console.error('Error fetching amiibo details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not released';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const regionNames: Record<string, string> = {
+    au: 'Australia',
+    eu: 'Europe',
+    jp: 'Japan',
+    na: 'North America',
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+      <div className="min-h-screen px-4 py-6 md:py-8">
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl">
+          <div className="sticky top-0 bg-white border-b border-gray-200 rounded-t-xl z-10 px-4 md:px-6 py-4">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors active:scale-95"
+            >
+              <ArrowLeft size={20} />
+              <span className="font-medium">Back to Collection</span>
+            </button>
+          </div>
+
+          <div className="p-4 md:p-6">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8">
+              <div className="flex-shrink-0 mx-auto md:mx-0">
+                <div className="bg-gray-50 rounded-lg p-6 md:p-8">
+                  <img
+                    src={amiibo.image}
+                    alt={amiibo.name}
+                    className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  {amiibo.name}
+                </h1>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Character</span>
+                    <p className="text-base text-gray-900">{amiibo.character}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Game Series</span>
+                    <p className="text-base text-gray-900">{amiibo.gameSeries}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Amiibo Series</span>
+                    <p className="text-base text-gray-900">{amiibo.amiiboSeries}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Type</span>
+                    <p className="text-base text-gray-900">{amiibo.type}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin text-gray-400" size={32} />
+              </div>
+            )}
+
+            {error && (
+              <div className="text-center py-12">
+                <p className="text-red-600">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && detailData && (
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-lg p-4 md:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="text-red-600" size={20} />
+                    <h2 className="text-lg md:text-xl font-semibold text-gray-900">Release Dates</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {Object.entries(detailData.release || {}).map(([region, date]) => (
+                      <div key={region} className="bg-white rounded-lg p-4">
+                        <div className="text-sm font-medium text-gray-500 mb-1">
+                          {regionNames[region] || region.toUpperCase()}
+                        </div>
+                        <div className="text-base text-gray-900">{formatDate(date)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {(detailData.gamesSwitch || detailData.games3DS || detailData.gamesWiiU) && (
+                  <div className="bg-gray-50 rounded-lg p-4 md:p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Gamepad2 className="text-blue-600" size={20} />
+                      <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+                        Compatible Games
+                      </h2>
+                    </div>
+
+                    <div className="space-y-6">
+                      {detailData.gamesSwitch && detailData.gamesSwitch.length > 0 && (
+                        <div>
+                          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            Nintendo Switch
+                            <span className="text-sm font-normal text-gray-500">
+                              ({detailData.gamesSwitch.length} games)
+                            </span>
+                          </h3>
+                          <div className="space-y-3">
+                            {detailData.gamesSwitch.map((game, index) => (
+                              <div key={index} className="bg-white rounded-lg p-4">
+                                <div className="font-medium text-gray-900 mb-2">
+                                  {game.gameName}
+                                </div>
+                                {game.amiiboUsage && game.amiiboUsage.length > 0 && (
+                                  <ul className="space-y-1">
+                                    {game.amiiboUsage.map((usage, idx) => (
+                                      <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                                        <span className="text-blue-500 mt-1">•</span>
+                                        <span>
+                                          {usage.Usage}
+                                          {usage.write && (
+                                            <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                              Write
+                                            </span>
+                                          )}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailData.games3DS && detailData.games3DS.length > 0 && (
+                        <div>
+                          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            Nintendo 3DS
+                            <span className="text-sm font-normal text-gray-500">
+                              ({detailData.games3DS.length} games)
+                            </span>
+                          </h3>
+                          <div className="space-y-3">
+                            {detailData.games3DS.map((game, index) => (
+                              <div key={index} className="bg-white rounded-lg p-4">
+                                <div className="font-medium text-gray-900 mb-2">
+                                  {game.gameName}
+                                </div>
+                                {game.amiiboUsage && game.amiiboUsage.length > 0 && (
+                                  <ul className="space-y-1">
+                                    {game.amiiboUsage.map((usage, idx) => (
+                                      <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                                        <span className="text-blue-500 mt-1">•</span>
+                                        <span>
+                                          {usage.Usage}
+                                          {usage.write && (
+                                            <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                              Write
+                                            </span>
+                                          )}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailData.gamesWiiU && detailData.gamesWiiU.length > 0 && (
+                        <div>
+                          <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            Wii U
+                            <span className="text-sm font-normal text-gray-500">
+                              ({detailData.gamesWiiU.length} games)
+                            </span>
+                          </h3>
+                          <div className="space-y-3">
+                            {detailData.gamesWiiU.map((game, index) => (
+                              <div key={index} className="bg-white rounded-lg p-4">
+                                <div className="font-medium text-gray-900 mb-2">
+                                  {game.gameName}
+                                </div>
+                                {game.amiiboUsage && game.amiiboUsage.length > 0 && (
+                                  <ul className="space-y-1">
+                                    {game.amiiboUsage.map((usage, idx) => (
+                                      <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                                        <span className="text-blue-500 mt-1">•</span>
+                                        <span>
+                                          {usage.Usage}
+                                          {usage.write && (
+                                            <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                              Write
+                                            </span>
+                                          )}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {!detailData.gamesSwitch && !detailData.games3DS && !detailData.gamesWiiU && (
+                  <div className="bg-gray-50 rounded-lg p-6 text-center">
+                    <p className="text-gray-500">No game compatibility information available</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

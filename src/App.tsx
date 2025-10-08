@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Star, Download, Upload, Search, Filter } from 'lucide-react';
+import AmiiboDetail from './AmiiboDetail';
 
 interface Amiibo {
   amiiboSeries: string;
@@ -25,6 +26,7 @@ function App() {
   const [filterFavorite, setFilterFavorite] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState<string>('');
   const [selectedTypes, setSelectedTypes] = useState<string>('');
+  const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null);
 
   useEffect(() => {
     fetchAmiibos();
@@ -327,7 +329,10 @@ function App() {
                   amiibo.owned ? 'ring-2 ring-green-500' : ''
                 }`}
               >
-                <div className="relative aspect-square bg-gray-50 p-4">
+                <div
+                  className="relative aspect-square bg-gray-50 p-4 cursor-pointer"
+                  onClick={() => setSelectedAmiibo(amiibo)}
+                >
                   <img
                     src={amiibo.image}
                     alt={amiibo.name}
@@ -378,6 +383,13 @@ function App() {
           </div>
         )}
       </div>
+
+      {selectedAmiibo && (
+        <AmiiboDetail
+          amiibo={selectedAmiibo}
+          onClose={() => setSelectedAmiibo(null)}
+        />
+      )}
     </div>
   );
 }
