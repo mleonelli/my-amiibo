@@ -340,7 +340,10 @@ function App() {
                     loading="lazy"
                   />
                   <button
-                    onClick={() => toggleFavorite(originalIndex)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(originalIndex);
+                    }}
                     className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
                       amiibo.favorite
                         ? 'bg-yellow-400 text-white'
