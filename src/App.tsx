@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useMemo } from "react"
 import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2 } from "lucide-react"
 import AmiiboDetail from "./AmiiboDetail"
-import ShoppingLinksModal from "./components/ShoppingLinksModal"
+import ShoppingLinksModal from "./ShoppingLinksModal"
 import shoppingLinksData from "./data/shopping-links.json"
 
 interface Amiibo {
