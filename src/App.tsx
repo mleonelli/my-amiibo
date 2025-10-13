@@ -1,42 +1,61 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Star, Download, Upload, Search, Filter, Share2 } from 'lucide-react';
-import AmiiboDetail from './AmiiboDetail';
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, useMemo } from "react"
+import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2 } from "lucide-react"
+import AmiiboDetail from "./AmiiboDetail"
+import ShoppingLinksModal from "./components/ShoppingLinksModal"
+import shoppingLinksData from "./data/shopping-links.json"
 
 interface Amiibo {
-  amiiboSeries: string;
-  character: string;
-  gameSeries: string;
-  head: string;
-  image: string;
-  name: string;
-  tail: string;
-  type: string;
+  amiiboSeries: string
+  character: string
+  gameSeries: string
+  head: string
+  image: string
+  name: string
+  tail: string
+  type: string
 }
 
 interface AmiiboWithStatus extends Amiibo {
-  owned: boolean;
-  favorite: boolean;
+  owned: boolean
+  favorite: boolean
+}
+
+interface ShoppingLink {
+  id: string
+  name: string
+  image: string
+  links: {
+    amazon?: Record<string, string>
+    ebay?: Record<string, string>
+    bestbuy?: Record<string, string>
+  }
 }
 
 function App() {
-  const [amiibos, setAmiibos] = useState<AmiiboWithStatus[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterOwned, setFilterOwned] = useState<boolean | null>(null);
-  const [filterFavorite, setFilterFavorite] = useState(false);
-  const [selectedSeries, setSelectedSeries] = useState<string>('');
-  const [selectedTypes, setSelectedTypes] = useState<string>('');
-  const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null);
+  const [amiibos, setAmiibos] = useState<AmiiboWithStatus[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterOwned, setFilterOwned] = useState<boolean | null>(null)
+  const [filterFavorite, setFilterFavorite] = useState(false)
+  const [selectedSeries, setSelectedSeries] = useState<string>("")
+  const [selectedTypes, setSelectedTypes] = useState<string>("")
+  const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null)
+  const [shoppingLinks, setShoppingLinks] = useState<Record<string, ShoppingLink>>({})
+  const [selectedShoppingAmiibo, setSelectedShoppingAmiibo] = useState<ShoppingLink | null>(null)
   const [shareMode, setShareMode] = useState(false)
   const [sharedCollection, setSharedCollection] = useState<Set<string>>(new Set())
 
-
   useEffect(() => {
-    fetchAmiibos()
     checkForSharedCollection()
+    fetchAmiibos()
+    loadShoppingLinks()
   }, [])
 
-    const checkForSharedCollection = () => {
+  const checkForSharedCollection = () => {
     const urlParams = new URLSearchParams(window.location.search)
     const collectionParam = urlParams.get("collection")
 
@@ -53,38 +72,57 @@ function App() {
     }
   }
 
-   const fetchAmiibos = async () => {
+  const loadShoppingLinks = () => {
+    const linksMap: Record<string, ShoppingLink> = {}
+    shoppingLinksData.forEach((link) => {
+      linksMap[link.id] = link
+    })
+    setShoppingLinks(linksMap)
+  }
+
+  const hasShoppingLinks = (amiibo: AmiiboWithStatus): boolean => {
+    const id = `${amiibo.head}${amiibo.tail}`
+    return id in shoppingLinks
+  }
+
+  const getShoppingData = (amiibo: AmiiboWithStatus): ShoppingLink | null => {
+    const id = `${amiibo.head}${amiibo.tail}`
+    return shoppingLinks[id] || null
+  }
+
+  const fetchAmiibos = async () => {
     try {
       const shouldUpdate = await shouldUpdateCache()
 
       let amiiboData: Amiibo[]
 
       if (shouldUpdate) {
-        // Fetch fresh data from API
         console.log("[v0] Fetching fresh data from API...")
         const response = await fetch("https://www.amiiboapi.com/api/amiibo/")
         const data = await response.json()
         amiiboData = data.amiibo
 
-        // Get the latest timestamp
         const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
         const timestampData = await timestampResponse.json()
 
-        // Save to cache
         localStorage.setItem("amiiboData", JSON.stringify(amiiboData))
         localStorage.setItem("amiiboLastUpdated", timestampData.lastUpdated)
       } else {
-        // Load from cache
         console.log("[v0] Loading data from cache...")
         const cachedData = localStorage.getItem("amiiboData")
         amiiboData = cachedData ? JSON.parse(cachedData) : []
       }
 
-      // Load user's owned/favorite statuses
-      const savedData = localStorage.getItem("amiiboCollection")
-      const savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = savedData
-        ? JSON.parse(savedData)
-        : {}
+      let savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = {}
+
+      if (shareMode && sharedCollection.size > 0) {
+        sharedCollection.forEach((id) => {
+          savedStatuses[id] = { owned: true, favorite: false }
+        })
+      } else {
+        const savedData = localStorage.getItem("amiiboCollection")
+        savedStatuses = savedData ? JSON.parse(savedData) : {}
+      }
 
       const amiiboWithStatus: AmiiboWithStatus[] = amiiboData.map((amiibo: Amiibo) => {
         const id = `${amiibo.head}${amiibo.tail}`
@@ -105,7 +143,6 @@ function App() {
 
   const shouldUpdateCache = async (): Promise<boolean> => {
     try {
-      // Check if we have cached data
       const cachedData = localStorage.getItem("amiiboData")
       const cachedTimestamp = localStorage.getItem("amiiboLastUpdated")
 
@@ -119,7 +156,6 @@ function App() {
         const data = await response.json()
         const apiTimestamp = data.lastUpdated
 
-        // Compare timestamps
         if (apiTimestamp !== cachedTimestamp) {
           console.log("[v0] Cache is outdated, will fetch fresh data")
           return true
@@ -127,17 +163,16 @@ function App() {
 
         console.log("[v0] Cache is up to date")
         return false
-      } catch (networkError) {
+      } catch (error) {
         console.log("[v0] Network unavailable, using cached data")
         return false
       }
     } catch (error) {
       console.error("Error checking cache status:", error)
-      // If we can't check, use cache if available
       return !localStorage.getItem("amiiboData")
     }
   }
-  
+
   const saveToLocalStorage = (updatedAmiibos: AmiiboWithStatus[]) => {
     const statuses: Record<string, { owned: boolean; favorite: boolean }> = {}
     updatedAmiibos.forEach((amiibo) => {
@@ -152,12 +187,10 @@ function App() {
 
   const preloadAmiiboDetails = async (amiibo: AmiiboWithStatus) => {
     try {
-      // Check if we already have cached details for this amiibo
       const cacheKey = `amiibo_detail_${amiibo.name}`
       const cachedDetail = localStorage.getItem(cacheKey)
       const cachedTimestamp = localStorage.getItem("amiibo_details_lastupdated")
 
-      // Get the latest timestamp from API
       let shouldFetch = !cachedDetail
 
       if (cachedDetail && cachedTimestamp) {
@@ -169,7 +202,6 @@ function App() {
             shouldFetch = true
           }
         } catch (error) {
-          // If we can't check timestamp, use cached data
           shouldFetch = false
         }
       }
@@ -181,35 +213,27 @@ function App() {
         )
         const data = await response.json()
 
-        // Cache the details
-         if (data.amiibo && data.amiibo.length > 0) {
+        if (data.amiibo && data.amiibo.length > 0) {
           const detailInfo = data.amiibo[0]
           localStorage.setItem(cacheKey, JSON.stringify(detailInfo))
 
-          // Update the timestamp
           const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
           const timestampData = await timestampResponse.json()
           localStorage.setItem("amiibo_details_lastupdated", timestampData.lastUpdated)
 
           console.log(`[v0] Successfully preloaded details for ${amiibo.name}`)
         }
-
-        // Update the timestamp
-        const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
-        const timestampData = await timestampResponse.json()
-        localStorage.setItem("amiibo_details_lastupdated", timestampData.lastUpdated)
-
-        console.log(`[v0] Successfully preloaded details for ${amiibo.name}`)
       } else {
         console.log(`[v0] Details for ${amiibo.name} already cached`)
       }
     } catch (error) {
       console.error(`Error preloading details for ${amiibo.name}:`, error)
-      // Silently fail - details will be fetched when user opens the detail view
     }
   }
 
   const toggleOwned = (index: number) => {
+    if (shareMode) return
+
     const updated = [...amiibos]
     updated[index].owned = !updated[index].owned
     setAmiibos(updated)
@@ -221,6 +245,8 @@ function App() {
   }
 
   const toggleFavorite = (index: number) => {
+    if (shareMode) return
+
     const updated = [...amiibos]
     updated[index].favorite = !updated[index].favorite
     setAmiibos(updated)
@@ -275,6 +301,26 @@ function App() {
     reader.readAsText(file)
   }
 
+  const shareCollection = async () => {
+    try {
+      const ownedIds = amiibos.filter((a) => a.owned).map((a) => `${a.head}${a.tail}`)
+
+      if (ownedIds.length === 0) {
+        alert("You don't have any owned amiibos to share!")
+        return
+      }
+
+      const encoded = btoa(JSON.stringify(ownedIds))
+      const shareUrl = `${window.location.origin}${window.location.pathname}?collection=${encoded}`
+
+      await navigator.clipboard.writeText(shareUrl)
+      alert("Share link copied to clipboard!")
+    } catch (error) {
+      console.error("Error creating share link:", error)
+      alert("Failed to create share link")
+    }
+  }
+
   const uniqueSeries = useMemo(() => {
     const series = new Set(amiibos.map((a) => a.gameSeries))
     return Array.from(series).sort()
@@ -317,17 +363,24 @@ function App() {
           <p className="text-gray-700 text-lg">Loading Amiibo collection...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-2">
-            Nintendo Amiibo Collection
-          </h1>
-          <p className="text-gray-600 text-lg">Track your complete Amiibo collection</p>
+          {shareMode ? (
+            <>
+              <h1 className="text-5xl font-bold text-gray-900 mb-2">Shared Amiibo Collection</h1>
+              <p className="text-gray-600 text-lg">Viewing a shared collection</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-5xl font-bold text-gray-900 mb-2">Nintendo Amiibo Collection</h1>
+              <p className="text-gray-600 text-lg">Track your complete Amiibo collection</p>
+            </>
+          )}
 
           <div className="mt-6 flex flex-wrap gap-6 items-center bg-white rounded-lg shadow-sm p-4">
             <div className="flex gap-4">
@@ -339,31 +392,38 @@ function App() {
                 <div className="text-3xl font-bold text-green-600">{stats.owned}</div>
                 <div className="text-sm text-gray-600">Owned</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600">{stats.favorites}</div>
-                <div className="text-sm text-gray-600">Favorites</div>
-              </div>
+              {!shareMode && (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600">{stats.favorites}</div>
+                  <div className="text-sm text-gray-600">Favorites</div>
+                </div>
+              )}
             </div>
 
-            <div className="ml-auto flex gap-3">
-              <button
-                onClick={exportCollection}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Download size={18} />
-                Export
-              </button>
-              <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-                <Upload size={18} />
-                Import
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={importCollection}
-                  className="hidden"
-                />
-              </label>
-            </div>
+            {!shareMode && (
+              <div className="ml-auto flex gap-3">
+                <button
+                  onClick={shareCollection}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  title="Share your collection"
+                >
+                  <Share2 size={18} />
+                  Share
+                </button>
+                <button
+                  onClick={exportCollection}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Download size={18} />
+                  Export
+                </button>
+                <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+                  <Upload size={18} />
+                  Import
+                  <input type="file" accept=".json" onChange={importCollection} className="hidden" />
+                </label>
+              </div>
+            )}
           </div>
         </header>
 
@@ -388,69 +448,69 @@ function App() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ownership Status
-              </label>
-              <select
-                value={filterOwned === null ? 'all' : filterOwned ? 'owned' : 'not-owned'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFilterOwned(value === 'all' ? null : value === 'owned');
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All</option>
-                <option value="owned">Owned</option>
-                <option value="not-owned">Not Owned</option>
-              </select>
-            </div>
+            {!shareMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ownership Status</label>
+                <select
+                  value={filterOwned === null ? "all" : filterOwned ? "owned" : "not-owned"}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setFilterOwned(value === "all" ? null : value === "owned")
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All</option>
+                  <option value="owned">Owned</option>
+                  <option value="not-owned">Not Owned</option>
+                </select>
+              </div>
+            )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Game Series
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Game Series</label>
               <select
                 value={selectedSeries}
                 onChange={(e) => setSelectedSeries(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Series</option>
-                {uniqueSeries.map(series => (
-                  <option key={series} value={series}>{series}</option>
+                {uniqueSeries.map((series) => (
+                  <option key={series} value={series}>
+                    {series}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Type
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
               <select
                 value={selectedTypes}
                 onChange={(e) => setSelectedTypes(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Types</option>
-                {uniqueTypes.map(types => (
-                  <option key={types} value={types}>{types}</option>
+                {uniqueTypes.map((types) => (
+                  <option key={types} value={types}>
+                    {types}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterFavorite}
-                  onChange={(e) => setFilterFavorite(e.target.checked)}
-                  className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Favorites Only
-                </span>
-              </label>
-            </div>
+            {!shareMode && (
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterFavorite}
+                    onChange={(e) => setFilterFavorite(e.target.checked)}
+                    className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Favorites Only</span>
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 text-sm text-gray-600">
@@ -460,15 +520,13 @@ function App() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredAmiibos.map((amiibo, index) => {
-            const originalIndex = amiibos.findIndex(
-              a => a.head === amiibo.head && a.tail === amiibo.tail
-            );
+            const originalIndex = amiibos.findIndex((a) => a.head === amiibo.head && a.tail === amiibo.tail)
 
             return (
               <div
                 key={`${amiibo.head}${amiibo.tail}`}
                 className={`bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-xl ${
-                  amiibo.owned ? 'ring-2 ring-green-500' : ''
+                  amiibo.owned ? "ring-2 ring-green-500" : ""
                 }`}
               >
                 <div
@@ -476,24 +534,39 @@ function App() {
                   onClick={() => setSelectedAmiibo(amiibo)}
                 >
                   <img
-                    src={amiibo.image}
+                    src={amiibo.image || "/placeholder.svg"}
                     alt={amiibo.name}
                     className="w-full h-full object-contain"
                     loading="lazy"
                   />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(originalIndex);
-                    }}
-                    className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
-                      amiibo.favorite
-                        ? 'bg-yellow-400 text-white'
-                        : 'bg-white/80 text-gray-400 hover:text-yellow-400'
-                    }`}
-                  >
-                    <Star size={18} fill={amiibo.favorite ? 'currentColor' : 'none'} />
-                  </button>
+                  {!shareMode && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleFavorite(originalIndex)
+                      }}
+                      className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
+                        amiibo.favorite ? "bg-yellow-400 text-white" : "bg-white/80 text-gray-400 hover:text-yellow-400"
+                      }`}
+                    >
+                      <Star size={18} fill={amiibo.favorite ? "currentColor" : "none"} />
+                    </button>
+                  )}
+                  {hasShoppingLinks(amiibo) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const shoppingData = getShoppingData(amiibo)
+                        if (shoppingData) {
+                          setSelectedShoppingAmiibo(shoppingData)
+                        }
+                      }}
+                      className="absolute top-2 left-2 p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      title="View shopping links"
+                    >
+                      <ShoppingCart size={18} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="p-3">
@@ -507,18 +580,19 @@ function App() {
                   </div>
 
                   <button
-                    onClick={() => toggleOwned(originalIndex)}
+                    onClick={() => !shareMode && toggleOwned(originalIndex)}
                     className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                       amiibo.owned
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    } ${shareMode ? "cursor-default" : ""}`}
+                    disabled={shareMode}
                   >
-                    {amiibo.owned ? 'Owned' : 'Not Owned'}
+                    {amiibo.owned ? "Owned" : "Not Owned"}
                   </button>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
 
@@ -533,10 +607,15 @@ function App() {
         <AmiiboDetail
           amiibo={selectedAmiibo}
           onClose={() => setSelectedAmiibo(null)}
+          shoppingData={getShoppingData(selectedAmiibo)}
         />
       )}
+
+      {selectedShoppingAmiibo && (
+        <ShoppingLinksModal shoppingData={selectedShoppingAmiibo} onClose={() => setSelectedShoppingAmiibo(null)} />
+      )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
