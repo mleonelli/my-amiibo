@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Star, Download, Upload, Search, Filter } from 'lucide-react';
+import { Star, Download, Upload, Search, Filter, Share2 } from 'lucide-react';
 import AmiiboDetail from './AmiiboDetail';
 
 interface Amiibo {
@@ -27,10 +27,31 @@ function App() {
   const [selectedSeries, setSelectedSeries] = useState<string>('');
   const [selectedTypes, setSelectedTypes] = useState<string>('');
   const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null);
+  const [shareMode, setShareMode] = useState(false)
+  const [sharedCollection, setSharedCollection] = useState<Set<string>>(new Set())
+
 
   useEffect(() => {
     fetchAmiibos()
+    checkForSharedCollection()
   }, [])
+
+    const checkForSharedCollection = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const collectionParam = urlParams.get("collection")
+
+    if (collectionParam) {
+      try {
+        const decoded = atob(collectionParam)
+        const ownedIds = JSON.parse(decoded)
+        setSharedCollection(new Set(ownedIds))
+        setShareMode(true)
+        setFilterOwned(true)
+      } catch (error) {
+        console.error("Error decoding shared collection:", error)
+      }
+    }
+  }
 
    const fetchAmiibos = async () => {
     try {
