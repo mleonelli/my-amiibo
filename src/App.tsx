@@ -3,9 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect, useMemo } from "react"
-import { Star, Download, Upload, Search, Filter, ShoppingCart } from "lucide-react"
+import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2 } from "lucide-react"
 import AmiiboDetail from "./AmiiboDetail"
-import ShoppingLinksModal from "./ShoppingLinksModal"
+import ShoppingLinksModal from "./components/ShoppingLinksModal"
 import shoppingLinksData from "./data/shopping-links.json"
 
 interface Amiibo {
@@ -46,11 +46,31 @@ function App() {
   const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null)
   const [shoppingLinks, setShoppingLinks] = useState<Record<string, ShoppingLink>>({})
   const [selectedShoppingAmiibo, setSelectedShoppingAmiibo] = useState<ShoppingLink | null>(null)
+  const [shareMode, setShareMode] = useState(false)
+  const [sharedCollection, setSharedCollection] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    checkForSharedCollection()
     fetchAmiibos()
     loadShoppingLinks()
   }, [])
+
+  const checkForSharedCollection = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const collectionParam = urlParams.get("collection")
+
+    if (collectionParam) {
+      try {
+        const decoded = atob(collectionParam)
+        const ownedIds = JSON.parse(decoded)
+        setSharedCollection(new Set(ownedIds))
+        setShareMode(true)
+        setFilterOwned(true)
+      } catch (error) {
+        console.error("Error decoding shared collection:", error)
+      }
+    }
+  }
 
   const loadShoppingLinks = () => {
     const linksMap: Record<string, ShoppingLink> = {}
@@ -93,10 +113,16 @@ function App() {
         amiiboData = cachedData ? JSON.parse(cachedData) : []
       }
 
-      const savedData = localStorage.getItem("amiiboCollection")
-      const savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = savedData
-        ? JSON.parse(savedData)
-        : {}
+      let savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = {}
+
+      if (shareMode && sharedCollection.size > 0) {
+        sharedCollection.forEach((id) => {
+          savedStatuses[id] = { owned: true, favorite: false }
+        })
+      } else {
+        const savedData = localStorage.getItem("amiiboCollection")
+        savedStatuses = savedData ? JSON.parse(savedData) : {}
+      }
 
       const amiiboWithStatus: AmiiboWithStatus[] = amiiboData.map((amiibo: Amiibo) => {
         const id = `${amiibo.head}${amiibo.tail}`
@@ -137,7 +163,7 @@ function App() {
 
         console.log("[v0] Cache is up to date")
         return false
-      } catch (networkError) {
+      } catch (error) {
         console.log("[v0] Network unavailable, using cached data")
         return false
       }
@@ -206,6 +232,8 @@ function App() {
   }
 
   const toggleOwned = (index: number) => {
+    if (shareMode) return
+
     const updated = [...amiibos]
     updated[index].owned = !updated[index].owned
     setAmiibos(updated)
@@ -217,6 +245,8 @@ function App() {
   }
 
   const toggleFavorite = (index: number) => {
+    if (shareMode) return
+
     const updated = [...amiibos]
     updated[index].favorite = !updated[index].favorite
     setAmiibos(updated)
@@ -271,6 +301,26 @@ function App() {
     reader.readAsText(file)
   }
 
+  const shareCollection = async () => {
+    try {
+      const ownedIds = amiibos.filter((a) => a.owned).map((a) => `${a.head}${a.tail}`)
+
+      if (ownedIds.length === 0) {
+        alert("You don't have any owned amiibos to share!")
+        return
+      }
+
+      const encoded = btoa(JSON.stringify(ownedIds))
+      const shareUrl = `${window.location.origin}${window.location.pathname}?collection=${encoded}`
+
+      await navigator.clipboard.writeText(shareUrl)
+      alert("Share link copied to clipboard!")
+    } catch (error) {
+      console.error("Error creating share link:", error)
+      alert("Failed to create share link")
+    }
+  }
+
   const uniqueSeries = useMemo(() => {
     const series = new Set(amiibos.map((a) => a.gameSeries))
     return Array.from(series).sort()
@@ -320,8 +370,17 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-2">Nintendo Amiibo Collection</h1>
-          <p className="text-gray-600 text-lg">Track your complete Amiibo collection</p>
+          {shareMode ? (
+            <>
+              <h1 className="text-5xl font-bold text-gray-900 mb-2">Shared Amiibo Collection</h1>
+              <p className="text-gray-600 text-lg">Viewing a shared collection</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-5xl font-bold text-gray-900 mb-2">Nintendo Amiibo Collection</h1>
+              <p className="text-gray-600 text-lg">Track your complete Amiibo collection</p>
+            </>
+          )}
 
           <div className="mt-6 flex flex-wrap gap-6 items-center bg-white rounded-lg shadow-sm p-4">
             <div className="flex gap-4">
@@ -333,26 +392,38 @@ function App() {
                 <div className="text-3xl font-bold text-green-600">{stats.owned}</div>
                 <div className="text-sm text-gray-600">Owned</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600">{stats.favorites}</div>
-                <div className="text-sm text-gray-600">Favorites</div>
-              </div>
+              {!shareMode && (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600">{stats.favorites}</div>
+                  <div className="text-sm text-gray-600">Favorites</div>
+                </div>
+              )}
             </div>
 
-            <div className="ml-auto flex gap-3">
-              <button
-                onClick={exportCollection}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Download size={18} />
-                Export
-              </button>
-              <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-                <Upload size={18} />
-                Import
-                <input type="file" accept=".json" onChange={importCollection} className="hidden" />
-              </label>
-            </div>
+            {!shareMode && (
+              <div className="ml-auto flex gap-3">
+                <button
+                  onClick={shareCollection}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  title="Share your collection"
+                >
+                  <Share2 size={18} />
+                  Share
+                </button>
+                <button
+                  onClick={exportCollection}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Download size={18} />
+                  Export
+                </button>
+                <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+                  <Upload size={18} />
+                  Import
+                  <input type="file" accept=".json" onChange={importCollection} className="hidden" />
+                </label>
+              </div>
+            )}
           </div>
         </header>
 
@@ -377,21 +448,23 @@ function App() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Ownership Status</label>
-              <select
-                value={filterOwned === null ? "all" : filterOwned ? "owned" : "not-owned"}
-                onChange={(e) => {
-                  const value = e.target.value
-                  setFilterOwned(value === "all" ? null : value === "owned")
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All</option>
-                <option value="owned">Owned</option>
-                <option value="not-owned">Not Owned</option>
-              </select>
-            </div>
+            {!shareMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ownership Status</label>
+                <select
+                  value={filterOwned === null ? "all" : filterOwned ? "owned" : "not-owned"}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setFilterOwned(value === "all" ? null : value === "owned")
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All</option>
+                  <option value="owned">Owned</option>
+                  <option value="not-owned">Not Owned</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Game Series</label>
@@ -425,17 +498,19 @@ function App() {
               </select>
             </div>
 
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterFavorite}
-                  onChange={(e) => setFilterFavorite(e.target.checked)}
-                  className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Favorites Only</span>
-              </label>
-            </div>
+            {!shareMode && (
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterFavorite}
+                    onChange={(e) => setFilterFavorite(e.target.checked)}
+                    className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Favorites Only</span>
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 text-sm text-gray-600">
@@ -464,17 +539,19 @@ function App() {
                     className="w-full h-full object-contain"
                     loading="lazy"
                   />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleFavorite(originalIndex)
-                    }}
-                    className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
-                      amiibo.favorite ? "bg-yellow-400 text-white" : "bg-white/80 text-gray-400 hover:text-yellow-400"
-                    }`}
-                  >
-                    <Star size={18} fill={amiibo.favorite ? "currentColor" : "none"} />
-                  </button>
+                  {!shareMode && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleFavorite(originalIndex)
+                      }}
+                      className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
+                        amiibo.favorite ? "bg-yellow-400 text-white" : "bg-white/80 text-gray-400 hover:text-yellow-400"
+                      }`}
+                    >
+                      <Star size={18} fill={amiibo.favorite ? "currentColor" : "none"} />
+                    </button>
+                  )}
                   {hasShoppingLinks(amiibo) && (
                     <button
                       onClick={(e) => {
@@ -503,12 +580,13 @@ function App() {
                   </div>
 
                   <button
-                    onClick={() => toggleOwned(originalIndex)}
+                    onClick={() => !shareMode && toggleOwned(originalIndex)}
                     className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                       amiibo.owned
                         ? "bg-green-600 text-white hover:bg-green-700"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                    } ${shareMode ? "cursor-default" : ""}`}
+                    disabled={shareMode}
                   >
                     {amiibo.owned ? "Owned" : "Not Owned"}
                   </button>
