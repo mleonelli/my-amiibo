@@ -129,11 +129,64 @@ function App() {
     localStorage.setItem("amiiboCollection", JSON.stringify(statuses))
   }
 
+  const preloadAmiiboDetails = async (amiibo: AmiiboWithStatus) => {
+    try {
+      // Check if we already have cached details for this amiibo
+      const cacheKey = `amiibo_detail_${amiibo.name}`
+      const cachedDetail = localStorage.getItem(cacheKey)
+      const cachedTimestamp = localStorage.getItem("amiibo_details_lastupdated")
+
+      // Get the latest timestamp from API
+      let shouldFetch = !cachedDetail
+
+      if (cachedDetail && cachedTimestamp) {
+        try {
+          const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+          const timestampData = await timestampResponse.json()
+
+          if (timestampData.lastUpdated !== cachedTimestamp) {
+            shouldFetch = true
+          }
+        } catch (error) {
+          // If we can't check timestamp, use cached data
+          shouldFetch = false
+        }
+      }
+
+      if (shouldFetch) {
+        console.log(`[v0] Preloading details for ${amiibo.name}...`)
+        const response = await fetch(
+          `https://www.amiiboapi.com/api/amiibo/?name=${encodeURIComponent(amiibo.name)}&showusage&showgames`,
+        )
+        const data = await response.json()
+
+        // Cache the details
+        localStorage.setItem(cacheKey, JSON.stringify(data))
+
+        // Update the timestamp
+        const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+        const timestampData = await timestampResponse.json()
+        localStorage.setItem("amiibo_details_lastupdated", timestampData.lastUpdated)
+
+        console.log(`[v0] Successfully preloaded details for ${amiibo.name}`)
+      } else {
+        console.log(`[v0] Details for ${amiibo.name} already cached`)
+      }
+    } catch (error) {
+      console.error(`Error preloading details for ${amiibo.name}:`, error)
+      // Silently fail - details will be fetched when user opens the detail view
+    }
+  }
+
   const toggleOwned = (index: number) => {
     const updated = [...amiibos]
     updated[index].owned = !updated[index].owned
     setAmiibos(updated)
     saveToLocalStorage(updated)
+
+    if (updated[index].owned) {
+      preloadAmiiboDetails(updated[index])
+    }
   }
 
   const toggleFavorite = (index: number) => {
