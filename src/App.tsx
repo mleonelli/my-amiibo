@@ -32,9 +32,8 @@ function App() {
     fetchAmiibos()
   }, [])
 
-  const fetchAmiibos = async () => {
+   const fetchAmiibos = async () => {
     try {
-      // Check if we need to update the cache
       const shouldUpdate = await shouldUpdateCache()
 
       let amiiboData: Amiibo[]
@@ -94,26 +93,30 @@ function App() {
         return true
       }
 
-      // Check the API's last updated timestamp
-      const response = await fetch("https://www.amiiboapi.com/api/lastupdated/")
-      const data = await response.json()
-      const apiTimestamp = data.lastUpdated
+      try {
+        const response = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+        const data = await response.json()
+        const apiTimestamp = data.lastUpdated
 
-      // Compare timestamps
-      if (apiTimestamp !== cachedTimestamp) {
-        console.log("[v0] Cache is outdated, will fetch fresh data")
-        return true
+        // Compare timestamps
+        if (apiTimestamp !== cachedTimestamp) {
+          console.log("[v0] Cache is outdated, will fetch fresh data")
+          return true
+        }
+
+        console.log("[v0] Cache is up to date")
+        return false
+      } catch (networkError) {
+        console.log("[v0] Network unavailable, using cached data")
+        return false
       }
-
-      console.log("[v0] Cache is up to date")
-      return false
     } catch (error) {
       console.error("Error checking cache status:", error)
       // If we can't check, use cache if available
       return !localStorage.getItem("amiiboData")
     }
   }
-
+  
   const saveToLocalStorage = (updatedAmiibos: AmiiboWithStatus[]) => {
     const statuses: Record<string, { owned: boolean; favorite: boolean }> = {}
     updatedAmiibos.forEach((amiibo) => {
