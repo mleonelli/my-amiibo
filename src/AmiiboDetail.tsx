@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Calendar, Gamepad2, Loader2 } from "lucide-react"
+import { ArrowLeft, Calendar, Gamepad2, Loader2, ShoppingCart, ExternalLink } from "lucide-react"
 
 interface AmiiboDetailProps {
   amiibo: {
@@ -13,6 +13,16 @@ interface AmiiboDetailProps {
     type: string
   }
   onClose: () => void
+  shoppingData?: {
+    id: string
+    name: string
+    image: string
+    links: {
+      amazon?: Record<string, string>
+      ebay?: Record<string, string>
+      bestbuy?: Record<string, string>
+    }
+  } | null
 }
 
 interface ReleaseDate {
@@ -37,7 +47,7 @@ interface AmiiboDetailData {
   gamesWiiU?: GameUsage[]
 }
 
-export default function AmiiboDetail({ amiibo, onClose }: AmiiboDetailProps) {
+export default function AmiiboDetail({ amiibo, onClose, shoppingData }: AmiiboDetailProps) {
   const [detailData, setDetailData] = useState<AmiiboDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -151,6 +161,12 @@ export default function AmiiboDetail({ amiibo, onClose }: AmiiboDetailProps) {
     na: "North America",
   }
 
+  const retailerNames: Record<string, string> = {
+    amazon: "Amazon",
+    ebay: "eBay",
+    bestbuy: "Best Buy",
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
       <div className="min-h-screen px-4 py-6 md:py-8">
@@ -200,6 +216,39 @@ export default function AmiiboDetail({ amiibo, onClose }: AmiiboDetailProps) {
                 </div>
               </div>
             </div>
+
+            {shoppingData && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 md:p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <ShoppingCart className="text-blue-600" size={24} />
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">Where to Buy</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries(shoppingData.links).map(([retailer, regions]) => (
+                    <div key={retailer} className="bg-white rounded-lg p-4 shadow-sm">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        {retailerNames[retailer] || retailer}
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {Object.entries(regions).map(([region, url]) => (
+                          <a
+                            key={region}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-400 rounded-lg transition-colors group"
+                          >
+                            <span className="text-sm font-medium text-blue-700">{region.toUpperCase()}</span>
+                            <ExternalLink size={14} className="text-blue-500 group-hover:text-blue-700" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {loading && (
               <div className="flex items-center justify-center py-12">
