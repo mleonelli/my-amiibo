@@ -29,143 +29,201 @@ function App() {
   const [selectedAmiibo, setSelectedAmiibo] = useState<AmiiboWithStatus | null>(null);
 
   useEffect(() => {
-    fetchAmiibos();
-  }, []);
+    fetchAmiibos()
+  }, [])
 
-  const fetchAmiibos = async () => {
+   const fetchAmiibos = async () => {
     try {
-      const response = await fetch('https://www.amiiboapi.com/api/amiibo/');
-      const data = await response.json();
+      const shouldUpdate = await shouldUpdateCache()
 
-      const savedData = localStorage.getItem('amiiboCollection');
+      let amiiboData: Amiibo[]
+
+      if (shouldUpdate) {
+        // Fetch fresh data from API
+        console.log("[v0] Fetching fresh data from API...")
+        const response = await fetch("https://www.amiiboapi.com/api/amiibo/")
+        const data = await response.json()
+        amiiboData = data.amiibo
+
+        // Get the latest timestamp
+        const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+        const timestampData = await timestampResponse.json()
+
+        // Save to cache
+        localStorage.setItem("amiiboData", JSON.stringify(amiiboData))
+        localStorage.setItem("amiiboLastUpdated", timestampData.lastUpdated)
+      } else {
+        // Load from cache
+        console.log("[v0] Loading data from cache...")
+        const cachedData = localStorage.getItem("amiiboData")
+        amiiboData = cachedData ? JSON.parse(cachedData) : []
+      }
+
+      // Load user's owned/favorite statuses
+      const savedData = localStorage.getItem("amiiboCollection")
       const savedStatuses: Record<string, { owned: boolean; favorite: boolean }> = savedData
         ? JSON.parse(savedData)
-        : {};
+        : {}
 
-      const amiiboWithStatus: AmiiboWithStatus[] = data.amiibo.map((amiibo: Amiibo) => {
-        const id = `${amiibo.head}${amiibo.tail}`;
+      const amiiboWithStatus: AmiiboWithStatus[] = amiiboData.map((amiibo: Amiibo) => {
+        const id = `${amiibo.head}${amiibo.tail}`
         return {
           ...amiibo,
           owned: savedStatuses[id]?.owned || false,
           favorite: savedStatuses[id]?.favorite || false,
-        };
-      });
+        }
+      })
 
-      setAmiibos(amiiboWithStatus);
-      setLoading(false);
+      setAmiibos(amiiboWithStatus)
+      setLoading(false)
     } catch (error) {
-      console.error('Error fetching amiibos:', error);
-      setLoading(false);
+      console.error("Error fetching amiibos:", error)
+      setLoading(false)
     }
-  };
+  }
 
+  const shouldUpdateCache = async (): Promise<boolean> => {
+    try {
+      // Check if we have cached data
+      const cachedData = localStorage.getItem("amiiboData")
+      const cachedTimestamp = localStorage.getItem("amiiboLastUpdated")
+
+      if (!cachedData || !cachedTimestamp) {
+        console.log("[v0] No cache found, will fetch fresh data")
+        return true
+      }
+
+      try {
+        const response = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+        const data = await response.json()
+        const apiTimestamp = data.lastUpdated
+
+        // Compare timestamps
+        if (apiTimestamp !== cachedTimestamp) {
+          console.log("[v0] Cache is outdated, will fetch fresh data")
+          return true
+        }
+
+        console.log("[v0] Cache is up to date")
+        return false
+      } catch (networkError) {
+        console.log("[v0] Network unavailable, using cached data")
+        return false
+      }
+    } catch (error) {
+      console.error("Error checking cache status:", error)
+      // If we can't check, use cache if available
+      return !localStorage.getItem("amiiboData")
+    }
+  }
+  
   const saveToLocalStorage = (updatedAmiibos: AmiiboWithStatus[]) => {
-    const statuses: Record<string, { owned: boolean; favorite: boolean }> = {};
-    updatedAmiibos.forEach(amiibo => {
-      const id = `${amiibo.head}${amiibo.tail}`;
+    const statuses: Record<string, { owned: boolean; favorite: boolean }> = {}
+    updatedAmiibos.forEach((amiibo) => {
+      const id = `${amiibo.head}${amiibo.tail}`
       statuses[id] = {
         owned: amiibo.owned,
         favorite: amiibo.favorite,
-      };
-    });
-    localStorage.setItem('amiiboCollection', JSON.stringify(statuses));
-  };
+      }
+    })
+    localStorage.setItem("amiiboCollection", JSON.stringify(statuses))
+  }
 
   const toggleOwned = (index: number) => {
-    const updated = [...amiibos];
-    updated[index].owned = !updated[index].owned;
-    setAmiibos(updated);
-    saveToLocalStorage(updated);
-  };
+    const updated = [...amiibos]
+    updated[index].owned = !updated[index].owned
+    setAmiibos(updated)
+    saveToLocalStorage(updated)
+  }
 
   const toggleFavorite = (index: number) => {
-    const updated = [...amiibos];
-    updated[index].favorite = !updated[index].favorite;
-    setAmiibos(updated);
-    saveToLocalStorage(updated);
-  };
+    const updated = [...amiibos]
+    updated[index].favorite = !updated[index].favorite
+    setAmiibos(updated)
+    saveToLocalStorage(updated)
+  }
 
   const exportCollection = () => {
-    const statuses: Record<string, { owned: boolean; favorite: boolean }> = {};
-    amiibos.forEach(amiibo => {
-      const id = `${amiibo.head}${amiibo.tail}`;
+    const statuses: Record<string, { owned: boolean; favorite: boolean }> = {}
+    amiibos.forEach((amiibo) => {
+      const id = `${amiibo.head}${amiibo.tail}`
       if (amiibo.owned || amiibo.favorite) {
         statuses[id] = {
           owned: amiibo.owned,
           favorite: amiibo.favorite,
-        };
+        }
       }
-    });
+    })
 
-    const dataStr = JSON.stringify(statuses, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'amiibo-collection.json';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+    const dataStr = JSON.stringify(statuses, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "amiibo-collection.json"
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   const importCollection = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const imported = JSON.parse(e.target?.result as string);
-        localStorage.setItem('amiiboCollection', JSON.stringify(imported));
+        const imported = JSON.parse(e.target?.result as string)
+        localStorage.setItem("amiiboCollection", JSON.stringify(imported))
 
-        const updated = amiibos.map(amiibo => {
-          const id = `${amiibo.head}${amiibo.tail}`;
+        const updated = amiibos.map((amiibo) => {
+          const id = `${amiibo.head}${amiibo.tail}`
           return {
             ...amiibo,
             owned: imported[id]?.owned || false,
             favorite: imported[id]?.favorite || false,
-          };
-        });
-        setAmiibos(updated);
+          }
+        })
+        setAmiibos(updated)
       } catch (error) {
-        alert('Error importing file. Please ensure it is a valid JSON file.');
+        alert("Error importing file. Please ensure it is a valid JSON file.")
       }
-    };
-    reader.readAsText(file);
-  };
+    }
+    reader.readAsText(file)
+  }
 
   const uniqueSeries = useMemo(() => {
-    const series = new Set(amiibos.map(a => a.gameSeries));
-    return Array.from(series).sort();
-  }, [amiibos]);
+    const series = new Set(amiibos.map((a) => a.gameSeries))
+    return Array.from(series).sort()
+  }, [amiibos])
 
   const uniqueTypes = useMemo(() => {
-    const types = new Set(amiibos.map(a => a.type));
-    return Array.from(types).sort();
-  }, [amiibos]);
+    const types = new Set(amiibos.map((a) => a.type))
+    return Array.from(types).sort()
+  }, [amiibos])
 
   const filteredAmiibos = useMemo(() => {
-    return amiibos.filter(amiibo => {
-      const matchesSearch = searchTerm === '' ||
+    return amiibos.filter((amiibo) => {
+      const matchesSearch =
+        searchTerm === "" ||
         amiibo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        amiibo.character.toLowerCase().includes(searchTerm.toLowerCase());
+        amiibo.character.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesOwned = filterOwned === null || amiibo.owned === filterOwned;
-      const matchesFavorite = !filterFavorite || amiibo.favorite;
-      const matchesSeries = selectedSeries === '' || amiibo.gameSeries === selectedSeries;
-      const matchesTypes = selectedTypes === '' || amiibo.type === selectedTypes;
-      
+      const matchesOwned = filterOwned === null || amiibo.owned === filterOwned
+      const matchesFavorite = !filterFavorite || amiibo.favorite
+      const matchesSeries = selectedSeries === "" || amiibo.gameSeries === selectedSeries
+      const matchesTypes = selectedTypes === "" || amiibo.type === selectedTypes
 
-      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries && matchesTypes;
-    });
-  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries, selectedTypes]);
+      return matchesSearch && matchesOwned && matchesFavorite && matchesSeries && matchesTypes
+    })
+  }, [amiibos, searchTerm, filterOwned, filterFavorite, selectedSeries, selectedTypes])
 
   const stats = useMemo(() => {
     return {
       total: amiibos.length,
-      owned: amiibos.filter(a => a.owned).length,
-      favorites: amiibos.filter(a => a.favorite).length,
-    };
-  }, [amiibos]);
+      owned: amiibos.filter((a) => a.owned).length,
+      favorites: amiibos.filter((a) => a.favorite).length,
+    }
+  }, [amiibos])
 
   if (loading) {
     return (
