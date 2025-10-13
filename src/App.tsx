@@ -161,7 +161,17 @@ function App() {
         const data = await response.json()
 
         // Cache the details
-        localStorage.setItem(cacheKey, JSON.stringify(data))
+         if (data.amiibo && data.amiibo.length > 0) {
+          const detailInfo = data.amiibo[0]
+          localStorage.setItem(cacheKey, JSON.stringify(detailInfo))
+
+          // Update the timestamp
+          const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
+          const timestampData = await timestampResponse.json()
+          localStorage.setItem("amiibo_details_lastupdated", timestampData.lastUpdated)
+
+          console.log(`[v0] Successfully preloaded details for ${amiibo.name}`)
+        }
 
         // Update the timestamp
         const timestampResponse = await fetch("https://www.amiiboapi.com/api/lastupdated/")
