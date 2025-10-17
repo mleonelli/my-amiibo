@@ -62,8 +62,13 @@ function App() {
 
     if (collectionParam) {
       try {
-        const decoded = atob(collectionParam)
-        const ownedIds = JSON.parse(decoded)
+        const decompressed = LZString.decompressFromEncodedURIComponent(collectionParam)
+        if (!decompressed) {
+          console.error("Failed to decompress shared collection")
+          return
+        }
+
+        const ownedIds = JSON.parse(decompressed)
         setSharedCollection(new Set(ownedIds))
         setShareMode(true)
         setFilterOwned(true)
