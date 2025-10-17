@@ -1,0 +1,123 @@
+[
+  {
+    "id": "mario",
+    "name": "Mario Amiibo (Super Smash Bros Series)",
+    "image": "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_00000000-00000002.png",
+    "links": {
+      "amazon": {
+        "us": "https://www.amazon.com/dp/B00O9A48N2?tag=YOURTAGUS-20",
+        "uk": "https://www.amazon.co.uk/dp/B00O9A48N2?tag=YOURTAGUK-21",
+        "fr": "https://www.amazon.fr/dp/B00O9A48N2?tag=YOURTAGFR-21",
+        "de": "https://www.amazon.de/dp/B00O9A48N2?tag=YOURTAGDE-21",
+        "it": "https://www.amazon.it/dp/B00O9A48N2?tag=YOURTAGIT-21",
+        "jp": "https://www.amazon.co.jp/dp/B00O9A48N2?tag=YOURTAGJP-22"
+      },
+      "ebay": {
+        "us": "https://www.ebay.com/sch/i.html?_nkw=Mario+Amiibo&campid=YOURCAMPIDUS",
+        "uk": "https://www.ebay.co.uk/sch/i.html?_nkw=Mario+Amiibo&campid=YOURCAMPIDUK",
+        "de": "https://www.ebay.de/sch/i.html?_nkw=Mario+Amiibo&campid=YOURCAMPIDDE",
+        "fr": "https://www.ebay.fr/sch/i.html?_nkw=Mario+Amiibo&campid=YOURCAMPIDFR",
+        "it": "https://www.ebay.it/sch/i.html?_nkw=Mario+Amiibo&campid=YOURCAMPIDIT"
+      },
+      "bestbuy": {
+        "us": "https://www.bestbuy.com/site/searchpage.jsp?st=Mario+Amiibo&ref=affiliate"
+      }
+    }
+  },
+  {
+    "id": "link",
+    "name": "Link Amiibo (The Legend of Zelda Series)",
+    "image": "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_00000000-00000003.png",
+    "links": {
+      "amazon": {
+        "us": "https://www.amazon.com/dp/B00O9A4MEW?tag=YOURTAGUS-20",
+        "uk": "https://www.amazon.co.uk/dp/B00O9A4MEW?tag=YOURTAGUK-21",
+        "de": "https://www.amazon.de/dp/B00O9A4MEW?tag=YOURTAGDE-21",
+        "fr": "https://www.amazon.fr/dp/B00O9A4MEW?tag=YOURTAGFR-21",
+        "it": "https://www.amazon.it/dp/B00O9A4MEW?tag=YOURTAGIT-21",
+        "jp": "https://www.amazon.co.jp/dp/B00O9A4MEW?tag=YOURTAGJP-22"
+      },
+      "ebay": {
+        "us": "https://www.ebay.com/sch/i.html?_nkw=Link+Amiibo&campid=YOURCAMPIDUS",
+        "uk": "https://www.ebay.co.uk/sch/i.html?_nkw=Link+Amiibo&campid=YOURCAMPIDUK",
+        "de": "https://www.ebay.de/sch/i.html?_nkw=Link+Amiibo&campid=YOURCAMPIDDE",
+        "it": "https://www.ebay.it/sch/i.html?_nkw=Link+Amiibo&campid=YOURCAMPIDIT"
+      },
+      "bestbuy": {
+        "us": "https://www.bestbuy.com/site/searchpage.jsp?st=Link+Amiibo&ref=affiliate"
+      }
+    }
+  },
+  {
+    "id": "zelda",
+    "name": "Zelda Amiibo (Tears of the Kingdom Series)",
+    "image": "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_00040000-037E0002.png",
+    "links": {
+      "amazon": {
+        "us": "https://www.amazon.com/dp/B0C6T8B5N3?tag=YOURTAGUS-20",
+        "uk": "https://www.amazon.co.uk/dp/B0C6T8B5N3?tag=YOURTAGUK-21",
+        "de": "https://www.amazon.de/dp/B0C6T8B5N3?tag=YOURTAGDE-21",
+        "fr": "https://www.amazon.fr/dp/B0C6T8B5N3?tag=YOURTAGFR-21",
+        "it": "https://www.amazon.it/dp/B0C6T8B5N3?tag=YOURTAGIT-21",
+        "jp": "https://www.amazon.co.jp/dp/B0C6T8B5N3?tag=YOURTAGJP-22"
+      },
+      "ebay": {
+        "us": "https://www.ebay.com/sch/i.html?_nkw=Zelda+Amiibo&campid=YOURCAMPIDUS",
+        "uk": "https://www.ebay.co.uk/sch/i.html?_nkw=Zelda+Amiibo&campid=YOURCAMPIDUK",
+        "fr": "https://www.ebay.fr/sch/i.html?_nkw=Zelda+Amiibo&campid=YOURCAMPIDFR",
+        "de": "https://www.ebay.de/sch/i.html?_nkw=Zelda+Amiibo&campid=YOURCAMPIDDE"
+      },
+      "bestbuy": {
+        "us": "https://www.bestbuy.com/site/searchpage.jsp?st=Zelda+Amiibo&ref=affiliate"
+      }
+    }
+  },
+  {
+    "id": "pikachu",
+    "name": "Pikachu Amiibo (Pokémon Series)",
+    "image": "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_01000000-00000002.png",
+    "links": {
+      "amazon": {
+        "us": "https://www.amazon.com/dp/B00N49Z7XO?tag=YOURTAGUS-20",
+        "uk": "https://www.amazon.co.uk/dp/B00N49Z7XO?tag=YOURTAGUK-21",
+        "fr": "https://www.amazon.fr/dp/B00N49Z7XO?tag=YOURTAGFR-21",
+        "de": "https://www.amazon.de/dp/B00N49Z7XO?tag=YOURTAGDE-21",
+        "it": "https://www.amazon.it/dp/B00N49Z7XO?tag=YOURTAGIT-21",
+        "jp": "https://www.amazon.co.jp/dp/B00N49Z7XO?tag=YOURTAGJP-22"
+      },
+      "ebay": {
+        "us": "https://www.ebay.com/sch/i.html?_nkw=Pikachu+Amiibo&campid=YOURCAMPIDUS",
+        "uk": "https://www.ebay.co.uk/sch/i.html?_nkw=Pikachu+Amiibo&campid=YOURCAMPIDUK",
+        "fr": "https://www.ebay.fr/sch/i.html?_nkw=Pikachu+Amiibo&campid=YOURCAMPIDFR",
+        "de": "https://www.ebay.de/sch/i.html?_nkw=Pikachu+Amiibo&campid=YOURCAMPIDDE"
+      },
+      "bestbuy": {
+        "us": "https://www.bestbuy.com/site/searchpage.jsp?st=Pikachu+Amiibo&ref=affiliate"
+      }
+    }
+  },
+  {
+    "id": "samus",
+    "name": "Samus Amiibo (Metroid Series)",
+    "image": "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_01000000-0000000A.png",
+    "links": {
+      "amazon": {
+        "us": "https://www.amazon.com/dp/B00N49XZA2?tag=YOURTAGUS-20",
+        "uk": "https://www.amazon.co.uk/dp/B00N49XZA2?tag=YOURTAGUK-21",
+        "fr": "https://www.amazon.fr/dp/B00N49XZA2?tag=YOURTAGFR-21",
+        "de": "https://www.amazon.de/dp/B00N49XZA2?tag=YOURTAGDE-21",
+        "it": "https://www.amazon.it/dp/B00N49XZA2?tag=YOURTAGIT-21",
+        "jp": "https://www.amazon.co.jp/dp/B00N49XZA2?tag=YOURTAGJP-22"
+      },
+      "ebay": {
+        "us": "https://www.ebay.com/sch/i.html?_nkw=Samus+Amiibo&campid=YOURCAMPIDUS",
+        "uk": "https://www.ebay.co.uk/sch/i.html?_nkw=Samus+Amiibo&campid=YOURCAMPIDUK",
+        "de": "https://www.ebay.de/sch/i.html?_nkw=Samus+Amiibo&campid=YOURCAMPIDDE",
+        "it": "https://www.ebay.it/sch/i.html?_nkw=Samus+Amiibo&campid=YOURCAMPIDIT"
+      },
+      "bestbuy": {
+        "us": "https://www.bestbuy.com/site/searchpage.jsp?st=Samus+Amiibo&ref=affiliate"
+      }
+    }
+  }
+]
