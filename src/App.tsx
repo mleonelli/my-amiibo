@@ -2,7 +2,6 @@ import type React from "react"
 
 import { useState, useEffect, useMemo } from "react"
 import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2 } from "lucide-react"
-import LZString from "lz-string"
 import AmiiboDetail from "./AmiiboDetail"
 import ShoppingLinksModal from "./ShoppingLinksModal"
 import shoppingLinksData from "./data/shopping-links.json"
@@ -60,14 +59,9 @@ function App() {
 
     if (collectionParam) {
       try {
-        const decompressed = LZString.decompressFromEncodedURIComponent(collectionParam)
-        if (!decompressed) {
-          console.error("Failed to decompress shared collection")
-          return
-        }
-
-        const ownedIds = JSON.parse(decompressed)
-        setSharedCollection(new Set(ownedIds))
+        const decoded = atob(collectionParam)
+        const indices = decoded.split(",").map(Number)
+        setSharedCollection(new Set(indices.map(String)))
         setShareMode(true)
         setFilterOwned(true)
       } catch (error) {
