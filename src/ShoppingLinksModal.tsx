@@ -5,7 +5,7 @@ import { X, ExternalLink } from "lucide-react"
 interface ShoppingLink {
   id: string
   name: string
-  image: string
+  image?: string
   links: {
     amazon?: Record<string, string>
     ebay?: Record<string, string>
@@ -16,9 +16,11 @@ interface ShoppingLink {
 interface ShoppingLinksModalProps {
   shoppingData: ShoppingLink
   onClose: () => void
+  // optional explicit thumbnail (e.g. from the list item)
+  thumbnail?: string
 }
 
-export default function ShoppingLinksModal({ shoppingData, onClose }: ShoppingLinksModalProps) {
+export default function ShoppingLinksModal({ shoppingData, onClose, thumbnail }: ShoppingLinksModalProps) {
   const regionNames: Record<string, string> = {
     us: "United States",
     uk: "United Kingdom",
@@ -33,6 +35,12 @@ export default function ShoppingLinksModal({ shoppingData, onClose }: ShoppingLi
     ebay: "eBay",
     bestbuy: "Best Buy",
   }
+
+  // resolution priority:
+  // 1) shoppingData.image (if shopping data carries it)
+  // 2) thumbnail prop passed from parent (the list item's image)
+  // 3) placeholder
+  const resolvedThumbnail = shoppingData.image ?? thumbnail ?? "/placeholder.svg"
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -50,7 +58,7 @@ export default function ShoppingLinksModal({ shoppingData, onClose }: ShoppingLi
         <div className="p-6">
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
             <img
-              src={shoppingData.image || "/placeholder.svg"}
+              src={resolvedThumbnail}
               alt={shoppingData.name}
               className="w-20 h-20 object-contain bg-gray-50 rounded-lg p-2"
             />
