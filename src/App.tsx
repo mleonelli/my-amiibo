@@ -525,8 +525,7 @@ function App() {
                 key={`${amiibo.head}${amiibo.tail}`}
                 className={`bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-xl ${
                   amiibo.owned ? "ring-2 ring-green-500" : ""
-                }`}
-              >
+                }`}> 
                 <div
                   className="relative aspect-square bg-gray-50 p-4 cursor-pointer"
                   onClick={() => setSelectedAmiibo(amiibo)}
@@ -545,7 +544,7 @@ function App() {
                       }}
                       className={`absolute top-2 right-2 p-2 rounded-full transition-colors ${
                         amiibo.favorite ? "bg-yellow-400 text-white" : "bg-white/80 text-gray-400 hover:text-yellow-400"
-                      }`}
+                      }`
                     >
                       <Star size={18} fill={amiibo.favorite ? "currentColor" : "none"} />
                     </button>
@@ -612,6 +611,17 @@ function App() {
       {selectedShoppingAmiibo && (
         <ShoppingLinksModal shoppingData={selectedShoppingAmiibo} onClose={() => setSelectedShoppingAmiibo(null)} />
       )}
+
+      <div className="py-6">
+        <footer className="container mx-auto px-4 text-center text-sm text-gray-500">
+          <div>
+            <a href="https://github.com/mleonelli/my-amiibo" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">mleonelli/my-amiibo</a>
+          </div>
+          <div className="mt-1">
+            This site may contain Amazon affiliate links. As an Amazon Associate I earn from qualifying purchases at no additional cost to you.
+          </div>
+        </footer>
+      </div>
     </div>
   )
 }
