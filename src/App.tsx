@@ -612,7 +612,7 @@ function App() {
       {selectedShoppingAmiibo && (
         <ShoppingLinksModal shoppingData={selectedShoppingAmiibo} onClose={() => setSelectedShoppingAmiibo(null)} />
       )}
-    </div>
+    
     <div className="py-6">
         <footer className="container mx-auto px-4 text-center text-sm text-gray-500">
           <div>
