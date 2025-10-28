@@ -613,6 +613,17 @@ function App() {
         <ShoppingLinksModal shoppingData={selectedShoppingAmiibo} onClose={() => setSelectedShoppingAmiibo(null)} />
       )}
     </div>
+    <div className="py-6">
+        <footer className="container mx-auto px-4 text-center text-sm text-gray-500">
+          <div>
+            <a href="https://github.com/mleonelli/my-amiibo" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">mleonelli/my-amiibo</a>
+          </div>
+          <div className="mt-1">
+            This site may contain Amazon affiliate links. As an Amazon Associate I earn from qualifying purchases at no additional cost to you.
+          </div>
+        </footer>
+      </div>
+    </div>
   )
 }
 
