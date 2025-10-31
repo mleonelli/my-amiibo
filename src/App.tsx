@@ -1,9 +1,10 @@
 import type React from "react"
 
 import { useState, useEffect, useMemo } from "react"
-import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2 } from "lucide-react"
+import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2, Joystick } from "lucide-react"
 import AmiiboDetail from "./AmiiboDetail"
 import ShoppingLinksModal from "./ShoppingLinksModal"
+import TriviaMaker from "./TriviaMaker"
 import shoppingLinksData from "./data/shopping-links.json"
 
 interface Amiibo {
@@ -20,6 +21,15 @@ interface Amiibo {
 interface AmiiboWithStatus extends Amiibo {
   owned: boolean
   favorite: boolean
+}
+
+interface AmiiboForTrivia extends Amiibo {
+  release?: {
+    na: string
+    eu: string
+    jp: string
+    au: string
+  }
 }
 
 interface ShoppingLink {
@@ -46,6 +56,7 @@ function App() {
   const [selectedShoppingAmiibo, setSelectedShoppingAmiibo] = useState<ShoppingLink | null>(null)
   const [shareMode, setShareMode] = useState(false)
   const [sharedCollection, setSharedCollection] = useState<Set<string>>(new Set())
+  const [triviaMode, setTriviaMode] = useState(false)
 
   useEffect(() => {
     checkForSharedCollection()
@@ -366,6 +377,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50">
+      {triviaMode ? (
+      <TriviaMaker 
+        amiibos={amiibos} 
+        onBack={() => setTriviaMode(false)} 
+      />
+    ) : (
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           {shareMode ? (
@@ -420,6 +437,14 @@ function App() {
                   Import
                   <input type="file" accept=".json" onChange={importCollection} className="hidden" />
                 </label>
+                <button
+                  onClick={() => setTriviaMode(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  title="Play Trivia"
+                >
+                  <Joystick size={18} />
+                  Play Trivia
+                </button>
               </div>
             )}
           </div>
@@ -600,7 +625,7 @@ function App() {
           </div>
         )}
       </div>
-
+      )}
       {selectedAmiibo && (
         <AmiiboDetail
           amiibo={selectedAmiibo}
