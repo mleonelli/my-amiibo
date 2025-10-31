@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Home, HelpCircle } from 'lucide-react'
 
-interface AmiiboWithStatus {
+interface AmiiboForTrivia {
   amiiboSeries: string
   character: string
   gameSeries: string
@@ -10,8 +10,6 @@ interface AmiiboWithStatus {
   name: string
   tail: string
   type: string
-  owned: boolean
-  favorite: boolean
   release?: {
     na: string
     eu: string
@@ -21,13 +19,13 @@ interface AmiiboWithStatus {
 }
 
 interface Question {
-  amiibo: AmiiboWithStatus
+  amiibo: AmiiboForTrivia
   type: 'name' | 'series' | 'year'
   correctAnswer: string
   options: string[]
 }
 
-const TriviaMaker = ({ amiibos, onBack }: { amiibos: AmiiboWithStatus[], onBack: () => void }) => {
+const TriviaMaker = ({ amiibos, onBack }: { amiibos: AmiiboForTrivia[], onBack: () => void }) => {
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
@@ -77,7 +75,7 @@ const TriviaMaker = ({ amiibos, onBack }: { amiibos: AmiiboWithStatus[], onBack:
     setQuestions(newQuestions)
   }
 
-  const getRandomAmiiboNames = (amiibos: AmiiboWithStatus[], excludeName: string): string[] => {
+  const getRandomAmiiboNames = (amiibos: AmiiboForTrivia[], excludeName: string): string[] => {
     return amiibos
       .filter(a => a.name !== excludeName)
       .sort(() => Math.random() - 0.5)
@@ -85,7 +83,7 @@ const TriviaMaker = ({ amiibos, onBack }: { amiibos: AmiiboWithStatus[], onBack:
       .map(a => a.name)
   }
 
-  const getRandomAmiiboSeries = (amiibos: AmiiboWithStatus[], excludeSeries: string): string[] => {
+  const getRandomAmiiboSeries = (amiibos: AmiiboForTrivia[], excludeSeries: string): string[] => {
     const uniqueSeries = [...new Set(amiibos.map(a => a.amiiboSeries))]
     return uniqueSeries
       .filter(s => s !== excludeSeries)
