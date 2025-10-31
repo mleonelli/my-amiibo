@@ -7,9 +7,6 @@ import ShoppingLinksModal from "./ShoppingLinksModal"
 import TriviaMaker from "./TriviaMaker"
 import shoppingLinksData from "./data/shopping-links.json"
 
-// Add to your App component's state declarations
-const [triviaMode, setTriviaMode] = useState(false)
-
 interface Amiibo {
   amiiboSeries: string
   character: string
@@ -59,6 +56,7 @@ function App() {
   const [selectedShoppingAmiibo, setSelectedShoppingAmiibo] = useState<ShoppingLink | null>(null)
   const [shareMode, setShareMode] = useState(false)
   const [sharedCollection, setSharedCollection] = useState<Set<string>>(new Set())
+  const [triviaMode, setTriviaMode] = useState(false)
 
   useEffect(() => {
     checkForSharedCollection()
