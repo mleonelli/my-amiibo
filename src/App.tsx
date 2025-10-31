@@ -618,6 +618,9 @@ function App() {
           <div>
             <a href="https://github.com/mleonelli/my-amiibo" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">mleonelli/my-amiibo</a>
           </div>
+          <div>
+            Powered By <a href="https://amiiboapi.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Amiibo API</a>
+          </div>
           <div className="mt-1">
             This site may contain Amazon affiliate links. As an Amazon Associate I earn from qualifying purchases at no additional cost to you.
           </div>
