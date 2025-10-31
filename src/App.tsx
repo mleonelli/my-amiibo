@@ -1,7 +1,7 @@
 import type React from "react"
 
 import { useState, useEffect, useMemo } from "react"
-import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2, GameController } from "lucide-react"
+import { Star, Download, Upload, Search, Filter, ShoppingCart, Share2, Joystick } from "lucide-react"
 import AmiiboDetail from "./AmiiboDetail"
 import ShoppingLinksModal from "./ShoppingLinksModal"
 import TriviaMaker from "./TriviaMaker"
@@ -444,7 +444,7 @@ function App() {
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                   title="Play Trivia"
                 >
-                  <GameController size={18} />
+                  <Joystick size={18} />
                   Play Trivia
                 </button>
               </div>
